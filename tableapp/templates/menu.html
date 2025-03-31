@@ -5,65 +5,184 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Menu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+    <style>
+        html, body {
+            font-family: 'Chakra Petch', sans-serif !important;
+        }
+
+        .menu-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .menu-card:hover {
+            transform: scale(1.05) translateY(-5px);
+            box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .menu-card img {
+            transition: transform 0.3s ease;
+        }
+
+        .menu-card:hover img {
+            transform: scale(1.1);
+        }
+    </style>
+    
 </head>
 
 <body class="bg-gray-100">
+    {% include 'user_nav.html' %}
+    
+    
+    <h1 class="text-center text-3xl font-bold mb-6 mt-6">เมนูอาหาร</h1>
 
-    <!-- Navigation Bar -->
-    <nav class="bg-red-500 shadow-lg">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <a href="#" class="text-2xl font-bold text-white">JustFood</a>
-                </div>
-                <div class="flex space-x-4 items-center">
-                    <a href="/" class="text-white hover:text-blue-300">Table</a>
-                    <a href="/menu/" class="text-white hover:text-blue-300">Menu</a>
-                    <a href="/my-bookings/" class="text-white hover:text-blue-300">My Bookings</a>
-                    {% if user.is_authenticated %}
-                    <span class="text-white">Hello, {{ user.username }}</span>
-                    <form method="POST" action="{% url 'logout' %}" class="inline">
-                        {% csrf_token %}
-                        <button type="submit" class="text-white hover:text-blue-300 ml-2">Logout</button>
-                    </form>
-                    {% else %}
-                    <a href="/login/" class="text-white hover:text-blue-300">Login</a>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <h1 class="text-center text-3xl font-bold mb-6 mt-6">เมนูแนะนำ</h1>
-
-    <!-- Navigation for categories -->
     <div class="flex justify-center mb-6">
-        <a href="?category=เมนูแนะนำ" class="bg-yellow-500 text-black px-4 py-2 rounded mx-2">เมนูแนะนำ</a>
-        <a href="?category=ต้ม" class="bg-yellow-200 px-4 py-2 rounded mx-2">ต้ม</a>
-        <a href="?category=ผัด" class="bg-yellow-200 px-4 py-2 rounded mx-2">ผัด</a>
-        <a href="?category=แกง" class="bg-yellow-200 px-4 py-2 rounded mx-2">แกง</a>
-        <a href="?category=ทอด" class="bg-yellow-200 px-4 py-2 rounded mx-2">ทอด</a>
+        <a href="/menu/"
+           class="{% if category_name %}bg-yellow-300{% else %}bg-yellow-500{% endif %} text-black px-4 py-2 rounded mx-2 hover:bg-yellow-400">
+            ทั้งหมด
+        </a>
+        {% for category in categories %}
+        <a href="/menu/?category={{ category.name }}" 
+           class="{% if category.name == category_name %}bg-yellow-300 hover:bg-yellow-300{% else %}bg-yellow-500 hover:bg-yellow-400{% endif %} text-black px-4 py-2 rounded mx-2">
+            {{ category.name }}
+        </a>
+        {% endfor %}
     </div>
-
-    <!-- Menu items -->
-    <div class="max-w-7xl mx-auto px-4">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {% for menu in menus %}
-            <div class="border p-4 rounded-lg shadow bg-white">
-                <img src="{{ menu.image_url }}" alt="{{ menu.food_name }}" class="w-full h-32 object-cover rounded">
-                <div class="flex justify-between items-center mt-4">
-                    <div>
-                        <h2 class="text-lg font-bold">{{ menu.food_name }}</h2>
-                        <p class="text-sm text-gray-500">{{ menu.price }} บาท</p>
-                    </div>
-                    <button class="bg-green-500 text-white rounded-full w-8 h-8 flex justify-center items-center">+</button>
-                </div>
+    <!-- แสดงข้อความถ้าไม่มีเมนู -->
+    {% if menus|length == 0 %}
+    <p class="text-center text-red-500 text-lg font-semibold">
+        ไม่มีเมนูในหมวด "{{ category_name }}"
+    </p>
+    {% endif %}
+    
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        {% for item in menus %}
+        <div class="menu-card border p-4 rounded-lg shadow bg-white group">
+            <div class="overflow-hidden rounded">
+                <img src="{{ item.menu.image.url }}" alt="{{ item.menu.food_name }}" 
+                     class="w-full h-32 object-cover rounded transition-transform duration-300 group-hover:scale-110">
             </div>
-            {% endfor %}
-        </div>
-    </div>
+            <div class="flex justify-between items-center mt-4">
+                <div>
+                    <h2 class="text-lg font-bold">{{ item.menu.food_name }}</h2>
+                    
+                    {% if item.promotion %}
+                        <p class="text-sm text-gray-400 line-through">{{ item.menu.price|floatformat:2 }} บาท</p>
+                        <p class="text-sm text-red-600 font-bold">
+                            {{ item.discounted_price|floatformat:2 }} บาท
+                        </p>
+                        <p class="text-xs text-green-500">
+                            {% if item.promotion.discount_type == "percentage" %}
+                                ลด {{ item.promotion.discount_value }}%
+                            {% else %}
+                                ลด ฿{{ item.promotion.discount_value }}
+                            {% endif %}
+                        </p>
+                    {% else %}
+                        <p class="text-sm text-gray-500">{{ item.menu.price|floatformat:2 }} บาท</p>
+                    {% endif %}
 
+                    <p class="text-sm text-gray-400">ประเภท: {{ item.menu.category.name }}</p>
+                </div>
+
+                {% if active_booking %}
+                <button onclick="addToCart({{ item.menu.id }})"
+                    class="bg-green-500 text-white rounded-full w-8 h-8 flex justify-center items-center transform transition-transform duration-300 hover:scale-110">
+                    +
+                </button>
+                {% else %}
+                <button disabled
+                    class="bg-gray-400 text-white rounded-full w-8 h-8 flex justify-center items-center cursor-not-allowed">
+                    +
+                </button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="mt-6 flex justify-center space-x-4">
+        {% if menus.has_previous %}
+        <a href="?page={{ menus.previous_page_number }}{% if category_name %}&category={{ category_name }}{% endif %}" 
+           class="px-3 py-2 border border-gray-300 rounded hover:bg-gray-200 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+            <span class="ml-1 hidden md:inline">Previous</span>
+        </a>
+        {% endif %}
+
+        <span class="px-3 py-2 border border-gray-300 rounded bg-gray-100">
+            Page {{ menus.number }} of {{ menus.paginator.num_pages }}
+        </span>
+
+        {% if menus.has_next %}
+        <a href="?page={{ menus.next_page_number }}{% if category_name %}&category={{ category_name }}{% endif %}" 
+           class="px-3 py-2 border border-gray-300 rounded hover:bg-gray-200 flex items-center">
+            <span class="mr-1 hidden md:inline">Next</span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+        </a>
+        {% endif %}
+    </div>
+    <script>
+        function addToCart(foodId) {
+            const formData = new FormData();
+            formData.append('food_id', foodId);
+    
+            fetch('/cart/add/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Check if the response is successful
+                if (data.success) {
+                    showPopup(`เพิ่ม ${data.food_name} ลงในตะกร้าแล้ว!`);
+                } else {
+                    showPopup(data.message || "คุณต้องจองโต๊ะก่อนสั่งอาหาร", true);
+                }
+            })
+            .catch(error => {
+                showPopup("เกิดข้อผิดพลาดในการเชื่อมต่อ", true);
+            });
+        }
+    
+        function showPopup(message, isError = false) {
+            const popup = document.getElementById("popup");
+            const popupMessage = document.getElementById("popup-message");
+    
+            popupMessage.textContent = message;
+            popup.classList.remove("hidden");
+    
+            if (isError) {
+                popup.classList.add("bg-red-500");
+                popup.classList.remove("bg-green-500");
+            } else {
+                popup.classList.add("bg-green-500");
+                popup.classList.remove("bg-red-500");
+            }
+    
+            // Hide the popup after 3 seconds
+            setTimeout(() => {
+                popup.classList.add("hidden");
+            }, 3000);
+        }
+    </script>
+    
+
+    <!-- Popup -->
+    <div id="popup" class="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg hidden">
+        <span id="popup-message"></span>
+    </div>
 </body>
 
 </html>

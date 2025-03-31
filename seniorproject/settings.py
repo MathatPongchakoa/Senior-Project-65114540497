@@ -38,6 +38,10 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     'tableapp',
+    'django_browser_reload',
+    'django_celery_beat',
+    'django_dbml',
+    'django.contrib.humanize',
 ]
 
 MIDDLEWARE = [
@@ -48,6 +52,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    'django_browser_reload.middleware.BrowserReloadMiddleware',
 ]
 
 ROOT_URLCONF = "seniorproject.urls"
@@ -81,8 +86,15 @@ DATABASES = {
         "USER": "root",             # ชื่อผู้ใช้ MySQL
         "PASSWORD": "1234",     # รหัสผ่าน MySQL
         "HOST": "localhost",                   # หรือที่อยู่ของ MySQL Server
-        "PORT": "3306",                        # พอร์ตของ MySQL (ค่าเริ่มต้นคือ 3306)
-    }
+        "PORT": "3306",
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+        },                   # พอร์ตของ MySQL (ค่าเริ่มต้นคือ 3306)
+    },
+    'sqlite3': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    },
 }
 
 
@@ -108,10 +120,9 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
+LANGUAGE_CODE = "TH-th"
 
 TIME_ZONE = 'Asia/Bangkok'
-
-TIME_ZONE = "UTC"
 
 USE_I18N = True
 
@@ -121,7 +132,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [BASE_DIR / "static"]
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -145,13 +160,12 @@ EMAIL_HOST_USER = 'mathat.po.65@ubu.ac.th'  # อีเมลผู้ส่ง
 EMAIL_HOST_PASSWORD = 'hnos oqff kuep voar'  # รหัสผ่านของอีเมล
 DEFAULT_FROM_EMAIL = 'mathat.po.65@ubu.ac.th'
 
-DEBUG = True
-from django.urls import reverse_lazy
-DEFAULT_DOMAIN = 'http://127.0.0.1:8000'  # เปลี่ยนเป็นโดเมนหรือ IP ที่เข้าถึงได้
 
-ABSOLUTE_URL_OVERRIDES = {
-    'auth.user.password_reset_confirm': lambda obj: f'{DEFAULT_DOMAIN}{reverse_lazy("password_reset_confirm", args=[obj.uid, obj.token])}'
-}
+# Celery settings
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+
 
 
 

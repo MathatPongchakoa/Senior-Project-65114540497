@@ -1,0 +1,162 @@
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>รายงานยอดขาย</title>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+</head>
+
+<body class="bg-gray-100">
+    {% include 'owner/admin_nav.html' %}
+
+    <div class="max-w-5xl mx-auto mt-6 p-6 bg-white shadow-md rounded-lg">
+        <h1 class="text-3xl font-bold text-center mb-6">📊 รายงานยอดขาย</h1>
+
+        <!-- ✅ Dropdown เลือกรายงาน -->
+        <div class="flex justify-center mt-6 space-x-4">
+            <button onclick="changeReportType('daily')" class="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all">
+                📅 รายวัน
+            </button>
+
+            <button onclick="changeReportType('monthly')" class="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all">
+                📆 รายเดือน
+            </button>
+
+            <button onclick="changeReportType('yearly')" class="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all">
+                📅 รายปี
+            </button>
+        </div>
+        
+
+        <!-- ✅ ฟอร์มเลือกวันที่ -->
+        <div id="dailyReportForm" class="flex flex-col items-center space-y-4 mt-4">
+            <h2 class="text-xl font-bold">📅 เลือกวันที่เพื่อดูยอดขาย</h2>
+            <form method="GET" action="{% url 'sales_report' %}" class="flex space-x-4">
+                <input type="date" name="date" id="selectedDate" value="{{ selected_date|default:'' }}"
+                    class="border border-gray-300 p-2 rounded">
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                    🔍 ดูยอดขาย
+                </button>
+            </form>
+        </div>
+
+        {% if selected_date %}
+        <h2 class="text-xl font-bold text-center mt-4 mb-4">📅 ยอดขายวันที่ {{ selected_date }}</h2>
+
+        {% if total_sales > 0 %}
+        <div class="text-center text-2xl font-bold text-green-600 mb-6">
+            ✅ ยอดขายรวม: {{ total_sales|floatformat:2|intcomma }} บาท
+        </div>
+
+        <!-- ✅ ตารางแสดงยอดขายตามเมนู -->
+        <div class="overflow-x-auto">
+            <table class="w-full border-collapse border border-gray-300">
+                <thead>
+                    <tr class="bg-gray-200">
+                        <th class="border border-gray-300 px-4 py-2">📌 ชื่ออาหาร</th>
+                        <th class="border border-gray-300 px-4 py-2">📦 จำนวนที่ขาย</th>
+                        <th class="border border-gray-300 px-4 py-2">💰 ยอดขายรวม</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for menu_name, data in menu_sales.items %}
+                    <tr>
+                        <td class="border border-gray-300 px-4 py-2">{{ menu_name }}</td>
+                        <td class="border border-gray-300 px-4 py-2 text-center">{{ data.quantity }}</td>
+                        <td class="border border-gray-300 px-4 py-2 text-right">{{ data.total_price|floatformat:2|intcomma }} บาท</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="border border-gray-300 px-4 py-2 text-center text-gray-500">ไม่มีข้อมูลยอดขาย</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ✅ กราฟยอดขาย -->
+        <div class="mt-8">
+            <h3 class="text-xl font-bold text-center">📊 กราฟยอดขาย</h3>
+            <!-- เพิ่ม Canvas สำหรับการแสดงกราฟ -->
+            <canvas id="salesChart" class="w-full h-96 mt-4"></canvas>
+        </div>
+
+        {% else %}
+        <p class="text-center text-gray-500 mt-6">⚠️ ไม่มีข้อมูลยอดขายสำหรับวันนี้</p>
+        {% endif %}
+
+        {% else %}
+        <p class="text-center text-gray-500 mt-6">📌 โปรดเลือกวันที่เพื่อดูยอดขาย</p>
+        {% endif %}
+    </div>
+
+    <script>
+        function changeReportType(reportType) {
+            let targetUrl = "";
+
+            if (reportType === "monthly") {
+                targetUrl = "{% url 'monthly_sales_report' %}";
+            } else if (reportType === "yearly") {
+                targetUrl = "{% url 'yearly_sales_report' %}";
+            } else {
+                targetUrl = "{% url 'sales_report' %}";
+            }
+
+            // เปลี่ยนหน้าโดยไปยัง URL ที่กำหนด
+            window.location.href = targetUrl;
+        }
+
+    
+        // ข้อมูลกราฟที่ได้รับจาก Django
+        const salesData = {
+            labels: {{ menu_sales_data.labels|safe }},
+            datasets: [{
+                label: 'ยอดขาย',
+                data: {{ menu_sales_data.data|safe }},
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        };
+    
+        // สร้างกราฟ
+        const config = {
+            type: 'bar',
+            data: salesData,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                return tooltipItem.raw + ' บาท';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { callback: function(value) { return value + ' บาท'; } }
+                    }
+                }
+            }
+        };
+    
+        window.onload = function() {
+            const ctx = document.getElementById('salesChart').getContext('2d');
+            new Chart(ctx, config);
+        };
+    </script>
+    
+
+</body>
+</html>

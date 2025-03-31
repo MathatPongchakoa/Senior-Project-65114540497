@@ -1,41 +1,107 @@
+{% load custom_filters %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Bookings</title>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        /* ใช้ฟอนต์ Chakra Petch ทั่วทั้งหน้า */
+        body {
+            font-family: 'Chakra Petch', sans-serif;
+        }
+    </style>
     <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
-    <div class="max-w-2xl w-full bg-white p-8 rounded-lg shadow-lg">
-        <h1 class="text-2xl font-bold mb-4 text-center">สถานะการจองโต๊ะของฉัน</h1>
+    <script>
+        function showPopup(bookingId) {
+            const popup = document.getElementById("popup");
+            popup.classList.remove("hidden");
 
-        {% if bookings %}
+            const confirmButton = document.getElementById("confirmCancelButton");
+            confirmButton.onclick = function () {
+                document.getElementById(`cancel-form-${bookingId}`).submit();
+            };
+        }
+
+        function closePopup() {
+            const popup = document.getElementById("popup");
+            popup.classList.add("hidden");
+        }
+    </script>
+</head>
+
+<body class="bg-gray-100 min-h-screen flex flex-col">
+    <!-- Navbar -->
+    {% include 'user_nav.html' %}
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+      
+
+    <!-- Content -->
+    <div class="flex-grow flex items-center justify-center">
+        <div class="max-w-3xl w-full bg-white p-8 rounded-lg shadow-lg">
+            <h1 class="text-2xl font-bold mb-6 text-center">สถานะการจองโต๊ะของฉัน</h1>
+
+            {% if bookings %}
             <table class="w-full border-collapse border border-gray-300">
                 <thead>
                     <tr class="bg-gray-200">
-                        <th class="border border-gray-300 px-4 py-2">Table Name</th>
-                        <th class="border border-gray-300 px-4 py-2">Date</th>
-                        <th class="border border-gray-300 px-4 py-2">Time</th>
+                        <th class="border border-gray-300 px-4 py-2">ชื่อโต๊ะ</th>
+                        <th class="border border-gray-300 px-4 py-2">วันที่</th>
+                        <th class="border border-gray-300 px-4 py-2">เวลาเริ่ม</th>
+                        <th class="border border-gray-300 px-4 py-2">เวลาสิ้นสุด</th>
+                        <th class="border border-gray-300 px-4 py-2">การจัดการ</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for booking in bookings %}
-                        <tr>
-                            <td class="border border-gray-300 px-4 py-2">{{ booking.table.table_name }}</td>
-                            <td class="border border-gray-300 px-4 py-2">{{ booking.booking_date }}</td>
-                            <td class="border border-gray-300 px-4 py-2">{{ booking.booking_time|time:"H:i" }}</td>
-                        </tr>
+                    <tr>
+                        <td class="border border-gray-300 px-4 py-2 text-center">{{ booking.table.table_name }}</td>
+                        <td class="border border-gray-300 px-4 py-2 text-center">{{ booking.booking_date|to_thai_date }}</td>
+                        <td class="border border-gray-300 px-4 py-2 text-center">{{ booking.booking_time|time:"H:i" }}</td>
+                        <td class="border border-gray-300 px-4 py-2 text-center">{{ booking.booking_end_time|time:"H:i" }}</td>
+                        <td class="border border-gray-300 px-4 py-2 text-center">
+                            <form method="POST" action="/cancel-booking/" id="cancel-form-{{ booking.id }}">
+                                {% csrf_token %}
+                                <input type="hidden" name="booking_id" value="{{ booking.id }}">
+                                <button type="button" onclick="showPopup({{ booking.id }})"
+                                    class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+                                    ยกเลิก
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
-        {% else %}
+            {% else %}
             <p class="text-center text-gray-500">ไม่มีโต๊ะที่คุณจองไว้</p>
-        {% endif %}
+            {% endif %}
 
-        <div class="text-center mt-4">
-            <a href="/" class="text-blue-500 hover:underline">back</a>
+            <div class="text-center mt-6">
+                <a href="/" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                    กลับหน้าหลัก
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popup -->
+    <div id="popup" class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center hidden">
+        <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+            <h2 class="text-xl font-bold mb-4">ยืนยันการยกเลิก</h2>
+            <p class="text-gray-600 mb-6">คุณแน่ใจว่าต้องการยกเลิกการจองโต๊ะนี้หรือไม่?</p>
+            <div class="flex justify-end">
+                <button onclick="closePopup()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded mr-2">
+                    ยกเลิก
+                </button>
+                <button id="confirmCancelButton" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+                    ยืนยัน
+                </button>
+            </div>
         </div>
     </div>
 </body>
+
 </html>
