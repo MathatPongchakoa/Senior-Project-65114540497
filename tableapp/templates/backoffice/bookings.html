@@ -1,0 +1,44 @@
+{% extends "backoffice/base.html" %}
+{% block title %}จัดการการจอง{% endblock %}
+{% block page_heading %}จัดการโต๊ะและการจอง{% endblock %}
+{% block content %}
+<div class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm mb-5">
+    <form method="get" class="flex flex-col sm:flex-row gap-3">
+        <input class="form-input" type="search" name="q" value="{{ query }}" placeholder="ค้นหาชื่อลูกค้าหรือโต๊ะ">
+        <select class="form-input sm:max-w-xs" name="status">
+            <option value="">ทุกสถานะ</option>
+            <option value="pending" {% if selected_status == "pending" %}selected{% endif %}>รอยืนยัน</option>
+            <option value="occupied" {% if selected_status == "occupied" %}selected{% endif %}>มีคนนั่ง</option>
+            <option value="cancelled" {% if selected_status == "cancelled" %}selected{% endif %}>ยกเลิก</option>
+        </select>
+        <button class="btn-primary" type="submit">ค้นหา</button>
+        <a class="btn-muted text-center" href="{% url 'backoffice:bookings' %}">ล้างตัวกรอง</a>
+    </form>
+</div>
+<div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+    <div class="table-wrap"><table class="w-full">
+        <thead><tr><th>รหัส</th><th>โต๊ะ</th><th>ลูกค้า</th><th>วันที่</th><th>เวลา</th><th>สถานะ</th><th>อัปเดตสถานะ</th></tr></thead>
+        <tbody>
+        {% for booking in bookings %}
+        <tr>
+            <td>#{{ booking.id }}</td><td class="font-semibold">{{ booking.table.table_name }}</td>
+            <td>{{ booking.user|default:"ไม่ระบุ" }}</td><td>{{ booking.booking_date|date:"d/m/Y" }}</td>
+            <td>{{ booking.booking_time|time:"H:i" }}–{{ booking.booking_end_time|time:"H:i" }}</td>
+            <td>{{ booking.get_status_display }}</td>
+            <td>
+                <form method="post" action="{% url 'backoffice:update_booking_status' booking.id %}" class="flex gap-2 items-center">
+                    {% csrf_token %}
+                    <select class="form-input min-w-32" name="status" aria-label="สถานะการจอง">
+                        {% for value,label in booking.STATUS_CHOICES %}
+                        <option value="{{ value }}" {% if booking.status == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    <button class="btn-primary" type="submit">บันทึก</button>
+                </form>
+            </td>
+        </tr>
+        {% empty %}<tr><td colspan="7" class="text-center text-slate-500 py-10">ไม่พบรายการจอง</td></tr>{% endfor %}
+        </tbody>
+    </table></div>
+</div>
+{% endblock %}
