@@ -1,0 +1,21 @@
+{% extends "backoffice/base.html" %}
+{% block title %}จัดการเมนูอาหาร{% endblock %}
+{% block page_heading %}จัดการเมนูอาหาร{% endblock %}
+{% block content %}
+<div class="flex flex-col sm:flex-row justify-between gap-3 mb-5">
+<form method="get" class="flex gap-2 flex-1"><input class="form-input" type="search" name="q" value="{{ query }}" placeholder="ค้นหาชื่ออาหารหรือประเภท"><button class="btn-muted" type="submit">ค้นหา</button></form>
+<a href="{% url 'backoffice:menu_add' %}" class="btn-primary text-center">+ เพิ่มเมนูอาหาร</a>
+</div>
+<div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+<div class="table-wrap"><table class="w-full"><thead><tr><th>รูป</th><th>ชื่ออาหาร</th><th>ประเภท</th><th>ราคา</th><th>จัดการ</th></tr></thead><tbody>
+{% for menu in menus %}
+<tr>
+<td>{% if menu.image %}<img src="{{ menu.image.url }}" alt="{{ menu.food_name }}" class="w-14 h-14 object-cover rounded-lg">{% else %}<div class="w-14 h-14 rounded-lg bg-slate-100 flex items-center justify-center text-xs text-slate-400">ไม่มีรูป</div>{% endif %}</td>
+<td class="font-semibold">{{ menu.food_name }}</td><td>{{ menu.category.name }}</td><td>{{ menu.price|floatformat:2 }} บาท</td>
+<td><div class="flex gap-3 items-center"><a class="text-emerald-700 font-semibold hover:underline" href="{% url 'backoffice:menu_edit' menu.id %}">แก้ไข</a>
+<form method="post" action="{% url 'backoffice:menu_delete' menu.id %}" onsubmit="return confirm('ยืนยันลบเมนู {{ menu.food_name|escapejs }} ?');">{% csrf_token %}<button class="text-red-600 font-semibold hover:underline" type="submit">ลบ</button></form></div></td>
+</tr>
+{% empty %}<tr><td colspan="5" class="text-center text-slate-500 py-10">ไม่พบเมนูอาหาร</td></tr>{% endfor %}
+</tbody></table></div>
+</div>
+{% endblock %}
