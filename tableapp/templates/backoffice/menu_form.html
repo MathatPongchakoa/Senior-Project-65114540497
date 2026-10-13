@@ -1,0 +1,20 @@
+{% extends "backoffice/base.html" %}
+{% block title %}{% if menu %}แก้ไขเมนู{% else %}เพิ่มเมนู{% endif %}{% endblock %}
+{% block page_heading %}{% if menu %}แก้ไขเมนูอาหาร{% else %}เพิ่มเมนูอาหาร{% endif %}{% endblock %}
+{% block content %}
+<div class="bg-white rounded-2xl shadow-sm p-5 sm:p-7 max-w-2xl">
+<form method="post" enctype="multipart/form-data" class="space-y-5">
+    {% csrf_token %}
+    {% for field in form %}
+    <div>
+        <label class="block font-semibold mb-2" for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.name == "image" and menu.image %}<img src="{{ menu.image.url }}" alt="{{ menu.food_name }}" class="w-28 h-28 object-cover rounded-xl mt-3">{% endif %}
+        {% for error in field.errors %}<p class="text-sm text-red-600 mt-1">{{ error }}</p>{% endfor %}
+    </div>
+    {% endfor %}
+    {% if form.non_field_errors %}<div class="text-red-600">{{ form.non_field_errors }}</div>{% endif %}
+    <div class="flex gap-3"><button class="btn-primary" type="submit">บันทึก</button><a class="btn-muted" href="{% url 'backoffice:menus' %}">ยกเลิก</a></div>
+</form>
+</div>
+{% endblock %}
