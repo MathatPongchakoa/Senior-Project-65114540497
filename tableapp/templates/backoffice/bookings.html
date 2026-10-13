@@ -29,9 +29,9 @@
                 <form method="post" action="{% url 'backoffice:update_booking_status' booking.id %}" class="flex gap-2 items-center">
                     {% csrf_token %}
                     <select class="form-input min-w-32" name="status" aria-label="สถานะการจอง">
-                        {% for value,label in booking.STATUS_CHOICES %}
-                        <option value="{{ value }}" {% if booking.status == value %}selected{% endif %}>{{ label }}</option>
-                        {% endfor %}
+                        <option value="pending" {% if booking.status == "pending" %}selected{% endif %}>รอยืนยัน</option>
+                        <option value="occupied" {% if booking.status == "occupied" %}selected{% endif %}>มีคนนั่ง</option>
+                        <option value="cancelled" {% if booking.status == "cancelled" %}selected{% endif %}>ยกเลิก</option>
                     </select>
                     <button class="btn-primary" type="submit">บันทึก</button>
                 </form>
