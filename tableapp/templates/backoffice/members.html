@@ -1,0 +1,33 @@
+{% extends "backoffice/base.html" %}
+{% block title %}สมาชิกและสิทธิ์{% endblock %}
+{% block page_heading %}จัดการสมาชิกและสิทธิ์{% endblock %}
+{% block content %}
+<div class="bg-blue-50 border border-blue-200 text-blue-900 rounded-xl p-4 mb-5 text-sm">
+    ผู้ใช้ทั่วไปไม่มีสิทธิ์เข้าถึง Backoffice การเปลี่ยนสิทธิ์พนักงานหรือเปิด/ปิดบัญชีทำได้เฉพาะ Superuser เท่านั้น
+</div>
+<form method="get" class="flex gap-2 mb-5"><input class="form-input" type="search" name="q" value="{{ query }}" placeholder="ค้นหาชื่อผู้ใช้ อีเมล หรือชื่อจริง"><button class="btn-primary" type="submit">ค้นหา</button></form>
+<div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+<div class="table-wrap"><table class="w-full"><thead><tr><th>สมาชิก</th><th>อีเมล</th><th>สิทธิ์</th><th>สถานะบัญชี</th>{% if request.user.is_superuser %}<th>จัดการสิทธิ์</th>{% endif %}</tr></thead><tbody>
+{% for member in members %}
+<tr>
+<td><div class="font-semibold">{{ member.username }}</div><div class="text-xs text-slate-500">{{ member.first_name }} {{ member.last_name }}</div></td>
+<td>{{ member.email|default:"—" }}</td>
+<td>{% if member.is_superuser %}<span class="text-purple-700 font-semibold">Superuser</span>{% elif member.is_staff %}<span class="text-emerald-700 font-semibold">Staff</span>{% else %}<span class="text-slate-500">ลูกค้า</span>{% endif %}</td>
+<td>{% if member.is_active %}<span class="text-emerald-700">ใช้งาน</span>{% else %}<span class="text-red-600">ปิดใช้งาน</span>{% endif %}</td>
+{% if request.user.is_superuser %}
+<td>
+    {% if not member.is_superuser %}
+    <div class="flex flex-wrap gap-2">
+        <form method="post" action="{% url 'backoffice:member_update' member.id %}">{% csrf_token %}<input type="hidden" name="action" value="toggle_staff"><button class="btn-muted" type="submit">{% if member.is_staff %}ถอดสิทธิ์ Staff{% else %}ให้สิทธิ์ Staff{% endif %}</button></form>
+        {% if member.id != request.user.id %}
+        <form method="post" action="{% url 'backoffice:member_update' member.id %}" onsubmit="return confirm('ยืนยันเปลี่ยนสถานะบัญชีนี้?');">{% csrf_token %}<input type="hidden" name="action" value="toggle_active"><button class="{% if member.is_active %}text-red-600 bg-red-50{% else %}text-emerald-700 bg-emerald-50{% endif %} px-3 py-2 rounded-lg font-semibold" type="submit">{% if member.is_active %}ปิดบัญชี{% else %}เปิดบัญชี{% endif %}</button></form>
+        {% endif %}
+    </div>
+    {% else %}<span class="text-xs text-slate-400">ป้องกันการแก้ไข Superuser</span>{% endif %}
+</td>
+{% endif %}
+</tr>
+{% empty %}<tr><td colspan="5" class="text-center text-slate-500 py-10">ไม่พบสมาชิก</td></tr>{% endfor %}
+</tbody></table></div>
+</div>
+{% endblock %}
