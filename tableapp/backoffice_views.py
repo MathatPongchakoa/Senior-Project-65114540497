@@ -191,7 +191,7 @@ def update_member(request, user_id):
         return redirect("backoffice:members")
 
     member = get_object_or_404(User, pk=user_id)
-    if member.pk == request.user.pk and request.POST.get("action") == "deactivate":
+    if member.pk == request.user.pk and request.POST.get("action") == "toggle_active":
         messages.error(request, "ไม่สามารถปิดใช้งานบัญชีของตัวเองได้")
         return redirect("backoffice:members")
 
