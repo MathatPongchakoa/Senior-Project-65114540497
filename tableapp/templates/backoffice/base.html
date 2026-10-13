@@ -1,0 +1,72 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Backoffice{% endblock %} | JustFood</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: Tahoma, "Noto Sans Thai", sans-serif; }
+        .nav-link { display:block; padding:.7rem .85rem; border-radius:.65rem; color:#cbd5e1; }
+        .nav-link:hover, .nav-link.active { background:#334155; color:#fff; }
+        .form-input { width:100%; border:1px solid #cbd5e1; border-radius:.55rem; padding:.65rem .8rem; background:white; }
+        .form-input:focus { outline:2px solid #86efac; border-color:#16a34a; }
+        .btn-primary { background:#15803d; color:white; padding:.65rem 1rem; border-radius:.55rem; font-weight:600; }
+        .btn-primary:hover { background:#166534; }
+        .btn-muted { background:#e2e8f0; color:#0f172a; padding:.6rem .9rem; border-radius:.55rem; font-weight:600; }
+        .table-wrap { overflow-x:auto; }
+        th, td { padding:.8rem .9rem; text-align:left; white-space:nowrap; }
+        th { color:#475569; font-size:.8rem; text-transform:uppercase; background:#f8fafc; }
+        td { border-top:1px solid #e2e8f0; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen">
+    <div class="min-h-screen lg:flex">
+        <aside class="bg-slate-900 text-white lg:w-64 lg:min-h-screen p-4">
+            <a href="{% url 'backoffice:dashboard' %}" class="block text-2xl font-bold px-3 py-4">
+                JustFood <span class="text-emerald-400">Admin</span>
+            </a>
+            <p class="px-3 text-xs uppercase tracking-widest text-slate-400 mb-3">จัดการร้านอาหาร</p>
+            <nav class="space-y-1">
+                <a class="nav-link {% if active_page == 'dashboard' %}active{% endif %}" href="{% url 'backoffice:dashboard' %}">ภาพรวม Dashboard</a>
+                <a class="nav-link {% if active_page == 'bookings' %}active{% endif %}" href="{% url 'backoffice:bookings' %}">รายการจอง</a>
+                <a class="nav-link {% if active_page == 'tables' %}active{% endif %}" href="{% url 'backoffice:tables' %}">จัดการโต๊ะ</a>
+                <a class="nav-link {% if active_page == 'menus' %}active{% endif %}" href="{% url 'backoffice:menus' %}">จัดการเมนูอาหาร</a>
+                <a class="nav-link {% if active_page == 'members' %}active{% endif %}" href="{% url 'backoffice:members' %}">สมาชิกและสิทธิ์</a>
+            </nav>
+            <div class="mt-8 border-t border-slate-700 pt-4 px-3 text-sm text-slate-300">
+                <p class="font-semibold">{{ request.user.username }}</p>
+                <p class="text-xs text-slate-400 mt-1">{% if request.user.is_superuser %}Superuser{% else %}Staff{% endif %}</p>
+                <a href="/" class="inline-block mt-4 text-emerald-300 hover:text-emerald-200">← กลับหน้าลูกค้า</a>
+                <form method="post" action="{% url 'logout' %}" class="mt-3">
+                    {% csrf_token %}
+                    <button class="text-sm text-slate-300 hover:text-white" type="submit">ออกจากระบบ</button>
+                </form>
+            </div>
+        </aside>
+
+        <main class="flex-1 min-w-0 p-4 sm:p-6 lg:p-8">
+            <header class="flex flex-wrap justify-between items-center gap-3 mb-6">
+                <div>
+                    <p class="text-sm text-slate-500">JustFood / Backoffice</p>
+                    <h1 class="text-2xl sm:text-3xl font-bold">{% block page_heading %}จัดการร้านอาหาร{% endblock %}</h1>
+                </div>
+                <span class="text-sm bg-white border rounded-full px-4 py-2">เข้าสู่ระบบในชื่อ {{ request.user.username }}</span>
+            </header>
+
+            {% if messages %}
+                <div class="space-y-2 mb-5">
+                    {% for message in messages %}
+                        <div class="rounded-lg border px-4 py-3 {% if message.tags == 'error' %}bg-red-50 border-red-200 text-red-800{% else %}bg-emerald-50 border-emerald-200 text-emerald-800{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</body>
+</html>
