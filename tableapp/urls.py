@@ -1,10 +1,12 @@
-from django.urls import path
+from django.urls import path, include
 from .views import *
 from django.contrib.auth import views as auth_views
 from django.conf.urls.static import static
+from django.conf import settings
 
 
 urlpatterns = [
+    path('backoffice/', include('tableapp.backoffice_urls')),
     path('booking/<str:table_name>/', booking_view, name='booking'),
     path('', table_status_view, name='table_status'),
     path('login/', login_view, name='login'),
