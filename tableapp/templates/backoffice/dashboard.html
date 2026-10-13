@@ -1,0 +1,32 @@
+{% extends "backoffice/base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_heading %}ภาพรวมร้านอาหาร{% endblock %}
+{% block content %}
+<div class="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white rounded-2xl p-5 shadow-sm"><p class="text-sm text-slate-500">โต๊ะทั้งหมด</p><p class="text-3xl font-bold mt-2">{{ table_total }}</p><p class="text-xs text-slate-400 mt-1">จัดการผังโต๊ะได้จากเมนูจัดการโต๊ะ</p></div>
+    <div class="bg-white rounded-2xl p-5 shadow-sm"><p class="text-sm text-slate-500">โต๊ะว่าง</p><p class="text-3xl font-bold text-emerald-600 mt-2">{{ table_available }}</p></div>
+    <div class="bg-white rounded-2xl p-5 shadow-sm"><p class="text-sm text-slate-500">จองแล้ว</p><p class="text-3xl font-bold text-amber-600 mt-2">{{ table_booked }}</p><p class="text-xs text-slate-400 mt-1">รอยืนยัน {{ booking_pending_count }} รายการ</p></div>
+    <div class="bg-white rounded-2xl p-5 shadow-sm"><p class="text-sm text-slate-500">กำลังนั่ง</p><p class="text-3xl font-bold text-red-600 mt-2">{{ table_occupied }}</p></div>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+    <div class="bg-white rounded-2xl p-5 shadow-sm"><p class="text-sm text-slate-500">การจองวันนี้</p><p class="text-2xl font-bold mt-2">{{ booking_today_count }}</p><p class="text-xs text-slate-400 mt-1">{{ today|date:"d/m/Y" }}</p></div>
+    <div class="bg-white rounded-2xl p-5 shadow-sm"><p class="text-sm text-slate-500">สมาชิก</p><p class="text-2xl font-bold mt-2">{{ member_count }}</p></div>
+    <div class="bg-white rounded-2xl p-5 shadow-sm"><p class="text-sm text-slate-500">เมนูอาหาร</p><p class="text-2xl font-bold mt-2">{{ menu_count }}</p></div>
+</div>
+<div class="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
+    <div class="flex flex-wrap justify-between items-center gap-3 p-5">
+        <h2 class="font-bold text-lg">การจองล่าสุด</h2>
+        <a href="{% url 'backoffice:bookings' %}" class="text-emerald-700 font-semibold hover:underline">ดูทั้งหมด →</a>
+    </div>
+    <div class="table-wrap"><table class="w-full"><thead><tr><th>โต๊ะ</th><th>ลูกค้า</th><th>วันที่</th><th>เวลา</th><th>สถานะ</th></tr></thead><tbody>
+    {% for booking in recent_bookings %}
+        <tr><td class="font-semibold">{{ booking.table.table_name }}</td><td>{{ booking.user|default:"ไม่ระบุ" }}</td><td>{{ booking.booking_date|date:"d/m/Y" }}</td><td>{{ booking.booking_time|time:"H:i" }}–{{ booking.booking_end_time|time:"H:i" }}</td><td>{{ booking.get_status_display }}</td></tr>
+    {% empty %}<tr><td colspan="5" class="text-center text-slate-500 py-8">ยังไม่มีรายการจอง</td></tr>{% endfor %}
+    </tbody></table></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <a href="{% url 'backoffice:bookings' %}" class="bg-white rounded-xl p-5 shadow-sm hover:shadow-md"><span class="font-bold">จัดการการจอง →</span><p class="text-sm text-slate-500 mt-1">ตรวจสอบและเปลี่ยนสถานะ</p></a>
+    <a href="{% url 'backoffice:tables' %}" class="bg-white rounded-xl p-5 shadow-sm hover:shadow-md"><span class="font-bold">จัดการโต๊ะ →</span><p class="text-sm text-slate-500 mt-1">แก้ไขจำนวนที่นั่งและสถานะ</p></a>
+    <a href="{% url 'backoffice:menus' %}" class="bg-white rounded-xl p-5 shadow-sm hover:shadow-md"><span class="font-bold">จัดการเมนู →</span><p class="text-sm text-slate-500 mt-1">เพิ่ม แก้ไข หรือลบเมนูอาหาร</p></a>
+</div>
+{% endblock %}
